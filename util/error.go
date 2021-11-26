@@ -3,6 +3,16 @@ package util
 import "errors"
 
 var (
+	// ActError 活动时间异常
+	ActError = errors.New("act error")
+
+	// RedisNil redis异常
+	RedisNil = errors.New("redis nil")
+	// ConfNil conf异常
+	ConfNil = errors.New("conf nil")
+	// LockUserError lock user error
+	LockUserError = errors.New("lock user error")
+
 	// OutDrawLimit 超过总抽奖次数
 	OutDrawLimit = errors.New("out draw limit")
 	// OutWinLimit 超过总中奖次数

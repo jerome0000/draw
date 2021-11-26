@@ -11,9 +11,20 @@ type Info struct {
 
 // Conf 抽奖的配置信息
 type Conf struct {
+	Act        Act
 	Strategies []Strategy
 	Rules      []Rule
 	Prizes     []Prize
+}
+
+// Act 抽奖信息
+type Act struct {
+	StartTime      time.Time // 开始时间
+	EndTime        time.Time // 结束时间
+	DrawCount      int64     // 抽奖次数
+	WinCount       int64     // 中奖次数
+	DrawCountDaily int64     // 每日抽奖次数
+	WinCountDaily  int64     // 每日中奖次数
 }
 
 // Strategy 策略信息
