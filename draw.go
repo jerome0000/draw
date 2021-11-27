@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-redis/redis/v8"
+	"github.com/jerome0000/draw/conf"
 	"github.com/jerome0000/draw/process"
 	"github.com/jerome0000/draw/util"
 	"time"
@@ -11,7 +12,7 @@ import (
 
 // IDraw draw interface
 type IDraw interface {
-	Do(ctx context.Context, redisClient *redis.Client, conf *Conf, uid int64, params map[string]interface{}) (*Info, error)
+	Do(ctx context.Context, redisClient *redis.Client, conf *conf.Conf, uid int64, params map[string]interface{}) (*conf.Info, error)
 }
 
 // Draw draw_struct
@@ -19,7 +20,7 @@ type Draw struct {
 }
 
 // Do do_draw
-func (d *Draw) Do(ctx context.Context, redisClient *redis.Client, conf *Conf, uid int64, params map[string]interface{}) (info *Info, err error) {
+func (d *Draw) Do(ctx context.Context, redisClient *redis.Client, conf *conf.Conf, uid int64, params map[string]interface{}) (info *conf.Info, err error) {
 	reqTime := time.Now()
 
 	var userInfo util.UserInfo
@@ -51,7 +52,7 @@ func (d *Draw) Do(ctx context.Context, redisClient *redis.Client, conf *Conf, ui
 	redisPipeline.HIncrBy(ctx, fmt.Sprintf(util.User, uid), "draw", 1)
 	redisPipeline.HIncrBy(ctx, fmt.Sprintf(util.User, uid), "draw_daily", 1)
 
-	if err = process.StrategyHandler(ctx, reqTime, info, conf); err != nil {
+	if err = process.StrategyHandler(ctx, reqTime, info, conf, params); err != nil {
 		return
 	}
 
@@ -70,7 +71,7 @@ func (d *Draw) Do(ctx context.Context, redisClient *redis.Client, conf *Conf, ui
 }
 
 // checkCommonStatus 检查常规参数
-func checkCommonStatus(redisClient *redis.Client, conf *Conf) error {
+func checkCommonStatus(redisClient *redis.Client, conf *conf.Conf) error {
 	if redisClient == nil {
 		return util.RedisNil
 	}
@@ -81,7 +82,7 @@ func checkCommonStatus(redisClient *redis.Client, conf *Conf) error {
 }
 
 // checkAct 检查活动状态
-func checkActStatus(act Act, time time.Time) error {
+func checkActStatus(act conf.Act, time time.Time) error {
 	if act.StartTime.Unix() <= time.Unix() {
 		return util.ActError
 	}
@@ -92,7 +93,7 @@ func checkActStatus(act Act, time time.Time) error {
 }
 
 // checkUserLimit 检查用户状态
-func checkUserLimit(userInfo util.UserInfo, act Act) error {
+func checkUserLimit(userInfo util.UserInfo, act conf.Act) error {
 	if userInfo.Draw >= act.DrawCount {
 		return util.OutDrawLimit
 	}
