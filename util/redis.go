@@ -21,7 +21,7 @@ const Rule = "rule_%v_%v_%v_%v"
 
 // Lock lock_user
 func Lock(ctx context.Context, redisClient *redis.Client, uid int64) error {
-	boolean, _ := redisClient.SetXX(ctx, fmt.Sprintf(UserLock, uid), uid, time.Second*3).Result()
+	boolean, _ := redisClient.SetNX(ctx, fmt.Sprintf(UserLock, uid), uid, time.Second*3).Result()
 	if !boolean {
 		return LockUserError
 	}
