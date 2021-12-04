@@ -14,16 +14,17 @@ import (
 
 // StrategyHandler strategy handler
 func StrategyHandler(ctx context.Context, reqTime time.Time, info *c.Info, conf *c.Conf, params map[string]interface{}) error {
+	// 检查策略配置
 	if len(conf.Strategies) == 0 {
 		return util.NotHitStrategy
 	}
 
 	// 筛选满足条件的策略
-	hitStrategies := make([]c.Strategy, 0)
+	hitStrategies := make([]*c.Strategy, 0)
 	var wg sync.WaitGroup
 	for _, strategy := range conf.Strategies {
 		wg.Add(1)
-		go func(st c.Strategy) {
+		go func(st *c.Strategy) {
 			defer wg.Done()
 			if checkStrategyStatus(st, reqTime, params) {
 				hitStrategies = append(hitStrategies, st)
@@ -46,7 +47,7 @@ func StrategyHandler(ctx context.Context, reqTime time.Time, info *c.Info, conf 
 		if conditionStrategy.Rate >= initRate {
 			return util.NotHitStrategy
 		}
-		info.StrategyInfo = *conditionStrategy
+		info.StrategyInfo = conditionStrategy
 		return nil
 	}
 
@@ -60,8 +61,8 @@ func StrategyHandler(ctx context.Context, reqTime time.Time, info *c.Info, conf 
 	return nil
 }
 
-func checkStrategyStatus(strategy c.Strategy, reqTime time.Time, params map[string]interface{}) bool {
-	if len(strategy.Rules) == 0 {
+func checkStrategyStatus(strategy *c.Strategy, reqTime time.Time, params map[string]interface{}) bool {
+	if strategy == nil || len(strategy.Rules) == 0 {
 		return false
 	}
 	if strategy.StartTime.Unix() <= reqTime.Unix() {
@@ -95,12 +96,12 @@ func checkStrategyStatus(strategy c.Strategy, reqTime time.Time, params map[stri
 	return true
 }
 
-func checkCondition(strategies []c.Strategy, params map[string]interface{}) *c.Strategy {
+func checkCondition(strategies []*c.Strategy, params map[string]interface{}) *c.Strategy {
 	// todo 强制命中补充
 	return nil
 }
 
-type WeightsSort []c.Strategy
+type WeightsSort []*c.Strategy
 
 func (w WeightsSort) Len() int {
 	return len(w)

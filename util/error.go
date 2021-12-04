@@ -26,6 +26,8 @@ var (
 	NotHitStrategy = errors.New("not hit strategy")
 	// NotHitRule 没有命中规则
 	NotHitRule = errors.New("not hit rule")
+	// NotHitPrize 没有命中的奖品
+	NotHitPrize = errors.New("not hot prize")
 
 	// OutCountLimit 奖品数量不足
 	OutCountLimit = errors.New("out count limit")

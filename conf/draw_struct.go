@@ -4,17 +4,17 @@ import "time"
 
 // Info 抽奖info,贯穿整个抽奖流程
 type Info struct {
-	StrategyInfo Strategy // 命中的策略信息
-	RuleInfo     Rule     // 命中的规则信息
-	WinPrize     Prize    // 命中的奖品信息
+	StrategyInfo *Strategy // 命中的策略信息
+	RuleInfo     *Rule     // 命中的规则信息
+	WinPrize     *Prize    // 命中的奖品信息
 }
 
 // Conf 抽奖的配置信息
 type Conf struct {
 	Act        Act
-	Strategies []Strategy
-	Rules      []Rule
-	Prizes     []Prize
+	Strategies []*Strategy
+	Rules      []*Rule
+	Prizes     []*Prize
 }
 
 // Act 抽奖信息
@@ -43,15 +43,22 @@ type Strategy struct {
 // Rule 规则信息
 type Rule struct {
 	ID           int64     // 规则ID
-	Prize        Prize     // 发放的奖品
-	Count        int64     // 奖品总数
-	CountDay     int64     // 每日奖品总数
+	Rate         float64   // 概率(此处的比例是个拟合的概率,可以认为是一个权重)
+	PrizeID      int64     // 发放的奖品ID
 	StartTime    time.Time // 奖品发放开始时间
 	EndTime      time.Time // 奖品发放结束时间
 	StartTimeDay string    // 奖品每天开始时间(H:i:s)
 	EndTimeDay   string    // 奖品每天结束时间(H:i:s)
 	Slice        int64     // 奖品分片
 	Range        int64     // 奖品打散(单位秒)
+	// 规则维度计数
+	Count    int64 // 奖品总数
+	CountDay int64 // 每日奖品总数
+	// 该规则下用户维度计数
+	UserDrawCount      int64 // 用户总抽奖个数
+	UserWinCount       int64 // 用户总中奖个数
+	UserDrawCountDaily int64 // 用户每日抽奖个数
+	UserWinCountDaily  int64 // 用户每日中奖个数
 }
 
 // Prize 奖品信息

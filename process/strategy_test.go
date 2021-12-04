@@ -14,7 +14,7 @@ func TestStrategyHandler(t *testing.T) {
 }
 
 func Test_checkStrategyStatus(t *testing.T) {
-	b := checkStrategyStatus(conf.Strategy{
+	b := checkStrategyStatus(&conf.Strategy{
 		ID:           0,
 		Rules:        []int64{1, 2, 3},
 		StartTime:    time.Now().AddDate(0, 0, -1),
@@ -27,12 +27,12 @@ func Test_checkStrategyStatus(t *testing.T) {
 }
 
 func TestSort(t *testing.T) {
-	arr := make([]conf.Strategy, 0)
-	arr = append(arr, conf.Strategy{
+	arr := make([]*conf.Strategy, 0)
+	arr = append(arr, &conf.Strategy{
 		ID:      0,
 		Weights: 0,
 	})
-	arr = append(arr, conf.Strategy{
+	arr = append(arr, &conf.Strategy{
 		ID:      1,
 		Weights: 1,
 	})

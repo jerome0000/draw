@@ -63,11 +63,11 @@ func (d *Draw) Do(ctx context.Context, redisClient *redis.Client, conf *conf.Con
 		return
 	}
 
-	if err = process.RuleHandler(ctx, reqTime, info, conf, params); err != nil {
+	if err = process.RuleHandler(ctx, info, conf); err != nil {
 		return
 	}
 
-	if err = process.StockHandler(ctx, reqTime, info, conf, params); err != nil {
+	if err = process.StockHandler(ctx, reqTime, uid, info, conf, redisPipeline); err != nil {
 		return
 	}
 
