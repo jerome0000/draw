@@ -3,11 +3,14 @@ package draw
 import (
 	"context"
 	"fmt"
+	"math/rand"
+	"time"
+
 	"github.com/go-redis/redis/v8"
+
 	"github.com/jerome0000/draw/conf"
 	"github.com/jerome0000/draw/process"
 	"github.com/jerome0000/draw/util"
-	"time"
 )
 
 // IDraw draw interface
@@ -22,6 +25,10 @@ type Draw struct {
 // Do do_draw
 func (d *Draw) Do(ctx context.Context, redisClient *redis.Client, conf *conf.Conf, uid int64, params map[string]interface{}) (info *conf.Info, err error) {
 	reqTime := time.Now()
+	reqData := reqTime.Format("20060102")
+
+	// 随机种子
+	rand.Seed(reqTime.UnixNano())
 
 	var userInfo util.UserInfo
 
@@ -50,22 +57,22 @@ func (d *Draw) Do(ctx context.Context, redisClient *redis.Client, conf *conf.Con
 	defer redisPipeline.Exec(ctx)
 
 	redisPipeline.HIncrBy(ctx, fmt.Sprintf(util.User, uid), "draw", 1)
-	redisPipeline.HIncrBy(ctx, fmt.Sprintf(util.User, uid), "draw_daily", 1)
+	redisPipeline.HIncrBy(ctx, fmt.Sprintf(util.User, uid), fmt.Sprintf("draw_%s", reqData), 1)
 
 	if err = process.StrategyHandler(ctx, reqTime, info, conf, params); err != nil {
 		return
 	}
 
-	if err = process.RuleHandler(); err != nil {
+	if err = process.RuleHandler(ctx, reqTime, info, conf, params); err != nil {
 		return
 	}
 
-	if err = process.StockHandler(); err != nil {
+	if err = process.StockHandler(ctx, reqTime, info, conf, params); err != nil {
 		return
 	}
 
 	redisPipeline.HIncrBy(ctx, fmt.Sprintf(util.User, uid), "win", 1)
-	redisPipeline.HIncrBy(ctx, fmt.Sprintf(util.User, uid), "win_daily", 1)
+	redisPipeline.HIncrBy(ctx, fmt.Sprintf(util.User, uid), fmt.Sprintf("win_%s", reqData), 1)
 
 	return
 }

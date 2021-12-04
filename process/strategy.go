@@ -3,11 +3,13 @@ package process
 import (
 	"context"
 	"fmt"
-	c "github.com/jerome0000/draw/conf"
-	"github.com/jerome0000/draw/util"
+	"math/rand"
 	"sort"
 	"sync"
 	"time"
+
+	c "github.com/jerome0000/draw/conf"
+	"github.com/jerome0000/draw/util"
 )
 
 // StrategyHandler strategy handler
@@ -34,10 +36,27 @@ func StrategyHandler(ctx context.Context, reqTime time.Time, info *c.Info, conf 
 		return util.NotHitStrategy
 	}
 
-	// 根据权重进行排序
-	sort.Sort(WeightsSort(hitStrategies))
-	info.StrategyInfo = hitStrategies[0]
+	// 初始化默认概率
+	initRate := rand.Float64() * 100
 
+	// 根据强制命中条件进行选择
+	conditionStrategy := checkCondition(hitStrategies, params)
+	if conditionStrategy != nil {
+		// 判断概率
+		if conditionStrategy.Rate >= initRate {
+			return util.NotHitStrategy
+		}
+		info.StrategyInfo = *conditionStrategy
+		return nil
+	}
+
+	// 根据概率命中条件进行选择
+	sort.Sort(WeightsSort(hitStrategies))
+	weightsStrategy := hitStrategies[0]
+	if weightsStrategy.Rate >= initRate {
+		return util.NotHitStrategy
+	}
+	info.StrategyInfo = weightsStrategy
 	return nil
 }
 
@@ -74,6 +93,11 @@ func checkStrategyStatus(strategy c.Strategy, reqTime time.Time, params map[stri
 		return false
 	}
 	return true
+}
+
+func checkCondition(strategies []c.Strategy, params map[string]interface{}) *c.Strategy {
+	// todo 强制命中补充
+	return nil
 }
 
 type WeightsSort []c.Strategy

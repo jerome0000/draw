@@ -2,10 +2,11 @@ package process
 
 import (
 	"fmt"
-	"github.com/jerome0000/draw/conf"
 	"sort"
 	"testing"
 	"time"
+
+	"github.com/jerome0000/draw/conf"
 )
 
 func TestStrategyHandler(t *testing.T) {
@@ -39,4 +40,7 @@ func TestSort(t *testing.T) {
 	sort.Sort(WeightsSort(arr))
 
 	fmt.Println(arr)
+}
+
+func Test_checkCondition(t *testing.T) {
 }

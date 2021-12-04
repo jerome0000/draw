@@ -36,7 +36,8 @@ type Strategy struct {
 	StartTimeDay string    // 每天开始时间(H:i:s)
 	EndTimeDay   string    // 每天结束时间(H:i:s)
 	Weights      int64     // 权重
-	// Condition    string    // 强制命中条件
+	Condition    string    // 强制命中条件
+	Rate         float64   // 概率
 }
 
 // Rule 规则信息

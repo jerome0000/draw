@@ -3,8 +3,9 @@ package util
 import (
 	"context"
 	"fmt"
-	"github.com/go-redis/redis/v8"
 	"time"
+
+	"github.com/go-redis/redis/v8"
 )
 
 // UserLock 用户锁
