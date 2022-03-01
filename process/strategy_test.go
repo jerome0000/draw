@@ -2,6 +2,7 @@ package process
 
 import (
 	"fmt"
+	"github.com/stretchr/testify/assert"
 	"sort"
 	"testing"
 	"time"
@@ -23,7 +24,7 @@ func Test_checkStrategyStatus(t *testing.T) {
 		EndTimeDay:   "24:00:00",
 		Weights:      1,
 	}, time.Now(), map[string]interface{}{})
-	fmt.Println(b)
+	assert.Equal(t, b, false)
 }
 
 func TestSort(t *testing.T) {
