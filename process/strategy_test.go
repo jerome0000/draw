@@ -2,12 +2,12 @@ package process
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"sort"
 	"testing"
 	"time"
 
-	"github.com/jerome0000/draw/conf"
+	"github.com/jerome0000/draw/config"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestStrategyHandler(t *testing.T) {
@@ -15,7 +15,7 @@ func TestStrategyHandler(t *testing.T) {
 }
 
 func Test_checkStrategyStatus(t *testing.T) {
-	b := checkStrategyStatus(&conf.Strategy{
+	b := checkStrategyStatus(&config.Strategy{
 		ID:           0,
 		Rules:        []int64{1, 2, 3},
 		StartTime:    time.Now().AddDate(0, 0, -1),
@@ -28,12 +28,12 @@ func Test_checkStrategyStatus(t *testing.T) {
 }
 
 func TestSort(t *testing.T) {
-	arr := make([]*conf.Strategy, 0)
-	arr = append(arr, &conf.Strategy{
+	arr := make([]*config.Strategy, 0)
+	arr = append(arr, &config.Strategy{
 		ID:      0,
 		Weights: 0,
 	})
-	arr = append(arr, &conf.Strategy{
+	arr = append(arr, &config.Strategy{
 		ID:      1,
 		Weights: 1,
 	})

@@ -1,16 +1,16 @@
-package conf
+package config
 
 import "time"
 
-// Info 抽奖info,贯穿整个抽奖流程
-type Info struct {
+// DrawInfo 抽奖info,贯穿整个抽奖流程
+type DrawInfo struct {
 	StrategyInfo *Strategy // 命中的策略信息
 	RuleInfo     *Rule     // 命中的规则信息
 	WinPrize     *Prize    // 命中的奖品信息
 }
 
-// Conf 抽奖的配置信息
-type Conf struct {
+// DrawConfig 抽奖的配置信息
+type DrawConfig struct {
 	Act        Act
 	Strategies []*Strategy
 	Rules      []*Rule

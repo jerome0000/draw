@@ -6,12 +6,12 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
-	drawConf "github.com/jerome0000/draw/conf"
+	"github.com/jerome0000/draw/config"
 	"github.com/jerome0000/draw/util"
 )
 
 // StockHandler stock handler
-func StockHandler(ctx context.Context, reqTime time.Time, uid int64, info *drawConf.Info, conf *drawConf.Conf, pipeline redis.Pipeliner) error {
+func StockHandler(ctx context.Context, reqTime time.Time, uid int64, info *config.DrawInfo, conf *config.DrawConfig, pipeline redis.Pipeliner) error {
 	rule := info.RuleInfo
 	if !checkRuleStatus(rule, reqTime) {
 		return util.NotHitPrize
@@ -30,7 +30,7 @@ func StockHandler(ctx context.Context, reqTime time.Time, uid int64, info *drawC
 	return nil
 }
 
-func checkRuleStatus(rule *drawConf.Rule, reqTime time.Time) bool {
+func checkRuleStatus(rule *config.Rule, reqTime time.Time) bool {
 	if rule.StartTime.Unix() >= reqTime.Unix() {
 		return false
 	}
@@ -62,7 +62,7 @@ func checkRuleStatus(rule *drawConf.Rule, reqTime time.Time) bool {
 	return true
 }
 
-func getPrizeInfo(prizeID int64, info *drawConf.Conf) *drawConf.Prize {
+func getPrizeInfo(prizeID int64, info *config.DrawConfig) *config.Prize {
 	for _, item := range info.Prizes {
 		if item.ID == prizeID {
 			return item

@@ -9,7 +9,7 @@ var (
 	// RedisNil redis异常
 	RedisNil = errors.New("redis nil")
 	// ConfNil conf异常
-	ConfNil = errors.New("conf nil")
+	ConfNil = errors.New("config nil")
 	// LockUserError lock user error
 	LockUserError = errors.New("lock user error")
 

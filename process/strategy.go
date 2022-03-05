@@ -8,23 +8,23 @@ import (
 	"sync"
 	"time"
 
-	c "github.com/jerome0000/draw/conf"
+	"github.com/jerome0000/draw/config"
 	"github.com/jerome0000/draw/util"
 )
 
 // StrategyHandler strategy handler
-func StrategyHandler(ctx context.Context, reqTime time.Time, info *c.Info, conf *c.Conf, params map[string]interface{}) error {
+func StrategyHandler(ctx context.Context, reqTime time.Time, info *config.DrawInfo, conf *config.DrawConfig, params map[string]interface{}) error {
 	// 检查策略配置
 	if len(conf.Strategies) == 0 {
 		return util.NotHitStrategy
 	}
 
 	// 筛选满足条件的策略
-	hitStrategies := make([]*c.Strategy, 0)
+	hitStrategies := make([]*config.Strategy, 0)
 	var wg sync.WaitGroup
 	for _, strategy := range conf.Strategies {
 		wg.Add(1)
-		go func(st *c.Strategy) {
+		go func(st *config.Strategy) {
 			defer wg.Done()
 			if checkStrategyStatus(st, reqTime, params) {
 				hitStrategies = append(hitStrategies, st)
@@ -61,7 +61,7 @@ func StrategyHandler(ctx context.Context, reqTime time.Time, info *c.Info, conf 
 	return nil
 }
 
-func checkStrategyStatus(strategy *c.Strategy, reqTime time.Time, params map[string]interface{}) bool {
+func checkStrategyStatus(strategy *config.Strategy, reqTime time.Time, params map[string]interface{}) bool {
 	if strategy == nil || len(strategy.Rules) == 0 {
 		return false
 	}
@@ -96,12 +96,12 @@ func checkStrategyStatus(strategy *c.Strategy, reqTime time.Time, params map[str
 	return true
 }
 
-func checkCondition(strategies []*c.Strategy, params map[string]interface{}) *c.Strategy {
+func checkCondition(strategies []*config.Strategy, params map[string]interface{}) *config.Strategy {
 	// todo 强制命中补充
 	return nil
 }
 
-type WeightsSort []*c.Strategy
+type WeightsSort []*config.Strategy
 
 func (w WeightsSort) Len() int {
 	return len(w)

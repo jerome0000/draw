@@ -2,13 +2,13 @@ package process
 
 import (
 	"context"
-	c "github.com/jerome0000/draw/conf"
+	"github.com/jerome0000/draw/config"
 	"github.com/jerome0000/draw/util"
 	"math/rand"
 )
 
 // RuleHandler rule handler
-func RuleHandler(ctx context.Context, info *c.Info, conf *c.Conf) error {
+func RuleHandler(ctx context.Context, info *config.DrawInfo, conf *config.DrawConfig) error {
 	// 检查规则配置
 	if len(conf.Rules) == 0 {
 		return util.NotHitRule
@@ -22,7 +22,7 @@ func RuleHandler(ctx context.Context, info *c.Info, conf *c.Conf) error {
 	}
 
 	// 有效的全部规则
-	allRules := make([]*c.Rule, 0)
+	allRules := make([]*config.Rule, 0)
 	for _, item := range conf.Rules {
 		if util.Int64InArray(item.ID, rules) {
 			allRules = append(allRules, item)
@@ -42,7 +42,7 @@ func RuleHandler(ctx context.Context, info *c.Info, conf *c.Conf) error {
 	return nil
 }
 
-func getRuleByRate(rules []*c.Rule) *c.Rule {
+func getRuleByRate(rules []*config.Rule) *config.Rule {
 	rate := 0.0
 	for _, item := range rules {
 		rate += item.Rate
