@@ -3,116 +3,118 @@ package draw
 import (
 	"context"
 	"fmt"
+	"github.com/jerome0000/draw/util/gerror"
 	"math/rand"
 	"time"
 
 	"github.com/go-redis/redis/v8"
-
 	"github.com/jerome0000/draw/config"
-	"github.com/jerome0000/draw/process"
-	"github.com/jerome0000/draw/util"
+	"github.com/jerome0000/draw/model"
 )
 
 // IDraw draw interface
 type IDraw interface {
-	Do(ctx context.Context, redisClient *redis.Client, drawConfig *config.DrawConfig, uid int64, params map[string]interface{}) (*config.DrawInfo, error)
+	Do(ctx context.Context, uid int64, params map[string]any) (*config.DrawInfo, error)
 }
 
 // Draw draw_struct
 type Draw struct {
-	ctx context.Context
+	ctx         context.Context
+	redisClient *redis.Client
+	drawConfig  *config.DrawConfig
+
+	reqTime time.Time
+	redisM  *model.Redis
+
+	userInfo map[string]int64
 }
 
-// Do do_draw
-func (d *Draw) Do(ctx context.Context, redisClient *redis.Client, drawConfig *config.DrawConfig, uid int64, params map[string]interface{}) (info *config.DrawInfo, err error) {
-	reqTime := time.Now()
-	reqData := reqTime.Format("20060102")
+// New init draw
+func New(ctx context.Context, redisClient *redis.Client, drawConfig *config.DrawConfig) *Draw {
+	return &Draw{
+		ctx:         ctx,
+		redisClient: redisClient,
+		drawConfig:  drawConfig,
 
-	// 随机种子
-	rand.Seed(reqTime.UnixNano())
+		redisM: model.New(ctx, redisClient),
+	}
+}
 
-	var userInfo util.UserInfo
+// Do 抽奖
+func (d *Draw) Do(ctx context.Context, uid int64, params map[string]any) (info *config.DrawInfo, err error) {
+	d.reqTime = time.Now()
+	rand.Seed(d.reqTime.UnixNano())
 
-	if err = checkCommonStatus(redisClient, drawConfig); err != nil {
+	if err = d.validate(); err != nil {
 		return
 	}
 
-	if err = checkActStatus(drawConfig.Act, reqTime); err != nil {
+	if err = d.redisM.Lock(ctx, uid); err != nil {
+		return
+	}
+	defer d.redisM.UnLock(ctx, uid)
+
+	if err = d.redisM.GetUserInfo(ctx, uid, &d.userInfo); err != nil {
 		return
 	}
 
-	if err = util.Lock(ctx, redisClient, uid); err != nil {
-		return
-	}
-	defer util.UnLock(ctx, redisClient, uid)
-
-	if userInfo, err = util.GetUserInfo(ctx, redisClient, uid); err != nil {
+	if err = d.checkUserLimit(); err != nil {
 		return
 	}
 
-	if err = checkUserLimit(userInfo, drawConfig.Act); err != nil {
-		return
-	}
-
-	redisPipeline := redisClient.Pipeline()
+	redisPipeline := d.redisClient.Pipeline()
 	defer redisPipeline.Exec(ctx)
 
-	redisPipeline.HIncrBy(ctx, fmt.Sprintf(util.User, uid), "draw", 1)
-	redisPipeline.HIncrBy(ctx, fmt.Sprintf(util.User, uid), fmt.Sprintf("draw_%s", reqData), 1)
+	redisPipeline.HIncrBy(ctx, fmt.Sprintf(model.User, uid), "draw", 1)
+	redisPipeline.HIncrBy(ctx, fmt.Sprintf(model.User, uid), fmt.Sprintf("draw_%s", d.reqTime.Format("20060102")), 1)
 
-	if err = process.StrategyHandler(ctx, reqTime, info, drawConfig, params); err != nil {
-		return
-	}
+	// 策略
+	// 规则
+	// 库存
 
-	if err = process.RuleHandler(ctx, info, drawConfig); err != nil {
-		return
-	}
-
-	if err = process.StockHandler(ctx, reqTime, uid, info, drawConfig, redisPipeline); err != nil {
-		return
-	}
-
-	redisPipeline.HIncrBy(ctx, fmt.Sprintf(util.User, uid), "win", 1)
-	redisPipeline.HIncrBy(ctx, fmt.Sprintf(util.User, uid), fmt.Sprintf("win_%s", reqData), 1)
+	redisPipeline.HIncrBy(ctx, fmt.Sprintf(model.User, uid), "win", 1)
+	redisPipeline.HIncrBy(ctx, fmt.Sprintf(model.User, uid), fmt.Sprintf("win_%s", d.reqTime.Format("20060102")), 1)
 
 	return
 }
 
-// checkCommonStatus 检查常规参数
-func checkCommonStatus(redisClient *redis.Client, conf *config.DrawConfig) error {
-	if redisClient == nil {
-		return util.RedisNil
+// validate 基础检验
+func (d *Draw) validate() error {
+	if d.redisClient == nil {
+		return gerror.ActError.WithLog("redis nil")
 	}
-	if conf == nil {
-		return util.ConfNil
+	if d.drawConfig == nil {
+		return gerror.ActError.WithLog("draw config error")
 	}
-	return nil
-}
-
-// checkAct 检查活动状态
-func checkActStatus(act config.Act, time time.Time) error {
-	if act.StartTime.Unix() <= time.Unix() {
-		return util.ActError
+	if d.drawConfig.Act.StartTime.Unix() <= d.reqTime.Unix() {
+		return gerror.ActError.WithLog("act not start")
 	}
-	if act.EndTime.Unix() >= time.Unix() {
-		return util.ActError
+	if d.drawConfig.Act.EndTime.Unix() >= d.reqTime.Unix() {
+		return gerror.ActError.WithLog("act had end")
 	}
 	return nil
 }
 
 // checkUserLimit 检查用户状态
-func checkUserLimit(userInfo util.UserInfo, act config.Act) error {
-	if userInfo.Draw >= act.DrawCount {
-		return util.OutDrawLimit
+func (d *Draw) checkUserLimit() error {
+	// 抽奖次数
+	drawCount, _ := d.userInfo["draw"]
+	drawCountDaily, _ := d.userInfo[fmt.Sprintf("draw_%s", d.reqTime.Format("20060102"))]
+	// 中奖次数
+	winCount, _ := d.userInfo["win"]
+	winCountDaily, _ := d.userInfo[fmt.Sprintf("win_%s", d.reqTime.Format("20060102"))]
+
+	if drawCount >= d.drawConfig.Act.DrawCount {
+		return gerror.OutDrawLimit
 	}
-	if userInfo.Win >= act.WinCount {
-		return util.OutWinLimit
+	if winCount >= d.drawConfig.Act.WinCount {
+		return gerror.OutWinLimit
 	}
-	if userInfo.DrawDaily >= act.DrawCountDaily {
-		return util.OutDrawDayLimit
+	if drawCountDaily >= d.drawConfig.Act.DrawCountDaily {
+		return gerror.OutDrawDayLimit
 	}
-	if userInfo.WinDaily >= act.WinCountDaily {
-		return util.OutWinDayLimit
+	if winCountDaily >= d.drawConfig.Act.WinCountDaily {
+		return gerror.OutWinDayLimit
 	}
 	return nil
 }

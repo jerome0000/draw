@@ -1,4 +1,4 @@
-package util
+package model
 
 import (
 	"context"
@@ -10,14 +10,14 @@ import (
 )
 
 var (
-	redisClient *redis.Client
-	ctx         context.Context
+	ctx context.Context
+	r   *Redis
 )
 
 func init() {
 	ctx = context.Background()
 
-	redisClient = redis.NewClient(&redis.Options{
+	redisClient := redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
 		Password: "",
 		DB:       0,
@@ -32,29 +32,32 @@ func init() {
 	}
 
 	fmt.Println(fmt.Sprintf("result: %v, err: %v", result, err))
+
+	r = New(ctx, redisClient)
 }
 
 func TestGetUserInfo(t *testing.T) {
-	userInfo, err := GetUserInfo(ctx, redisClient, 123123)
+	var result map[string]int64
+	err := r.GetUserInfo(ctx, 123123, &result)
 	if err != nil {
 		t.Error(err.Error())
 	}
-	t.Logf("result: %v, error: %v", userInfo, err)
+	t.Logf("result: %v, error: %v", result, err)
 }
 
 func TestLock(t *testing.T) {
 	var err error
 
-	err = Lock(ctx, redisClient, 123123)
+	err = r.Lock(ctx, 123123)
 	fmt.Println(err)
-	err = Lock(ctx, redisClient, 123123)
+	err = r.Lock(ctx, 123123)
 	fmt.Println(err)
 
 	time.Sleep(time.Second * 3)
-	err = Lock(ctx, redisClient, 123123)
+	err = r.Lock(ctx, 123123)
 	fmt.Println(err)
 }
 
 func TestUnLock(t *testing.T) {
-	UnLock(ctx, redisClient, 123123)
+	r.UnLock(ctx, 123123)
 }
