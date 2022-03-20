@@ -17,10 +17,6 @@ const (
 	// User 用户计数
 	// eg: user_[uid]
 	User = "user_%v"
-
-	// Rule 规则计数
-	// eg: rule_[strategyID]_[ruleID]_[slice]_[cycle]
-	Rule = "rule_%v_%v_%v_%v"
 )
 
 // Redis redis_struct
