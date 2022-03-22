@@ -2,8 +2,8 @@ package config
 
 import "time"
 
-// DrawInfo 抽奖info,贯穿整个抽奖流程
-type DrawInfo struct {
+// WinInfo 中奖信息,贯穿整个抽奖流程
+type WinInfo struct {
 	StrategyInfo *Strategy // 命中的策略信息
 	RuleInfo     *Rule     // 命中的规则信息
 	WinPrize     *Prize    // 命中的奖品信息

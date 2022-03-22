@@ -26,4 +26,6 @@ var (
 	OutWinLimit     = &Error{Errno: 3002, ErrMsg: "out win limit"}
 	OutDrawDayLimit = &Error{Errno: 3003, ErrMsg: "out draw day limit"}
 	OutWinDayLimit  = &Error{Errno: 3004, ErrMsg: "out win day limit"}
+
+	NoStrategy = &Error{Errno: 4001, ErrMsg: "no strategy"}
 )

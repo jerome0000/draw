@@ -14,7 +14,7 @@ import (
 
 // IDraw draw interface
 type IDraw interface {
-	Do(ctx context.Context, uid int64, params map[string]any) (*config.DrawInfo, error)
+	Do(ctx context.Context, uid int64, params map[string]any) (*config.WinInfo, error)
 }
 
 // Draw draw_struct
@@ -23,10 +23,11 @@ type Draw struct {
 	redisClient *redis.Client
 	drawConfig  *config.DrawConfig
 
+	winInfo  *config.WinInfo
+	userInfo map[string]int64
+
 	reqTime time.Time
 	redisM  *model.Redis
-
-	userInfo map[string]int64
 }
 
 // New init draw
@@ -36,12 +37,14 @@ func New(ctx context.Context, redisClient *redis.Client, drawConfig *config.Draw
 		redisClient: redisClient,
 		drawConfig:  drawConfig,
 
+		winInfo: &config.WinInfo{},
+
 		redisM: model.New(ctx, redisClient),
 	}
 }
 
 // Do 抽奖
-func (d *Draw) Do(ctx context.Context, uid int64, params map[string]any) (info *config.DrawInfo, err error) {
+func (d *Draw) Do(ctx context.Context, uid int64, params map[string]any) (info *config.WinInfo, err error) {
 	d.reqTime = time.Now()
 	rand.Seed(d.reqTime.UnixNano())
 
