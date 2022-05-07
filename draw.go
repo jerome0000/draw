@@ -3,6 +3,7 @@ package draw
 import (
 	"context"
 	"fmt"
+	"github.com/jerome0000/draw/process/strategy"
 	"github.com/jerome0000/draw/util/gerror"
 	"math/rand"
 	"time"
@@ -72,6 +73,10 @@ func (d *Draw) Do(ctx context.Context, uid int64, params map[string]any) (info *
 	redisPipeline.HIncrBy(ctx, fmt.Sprintf(model.User, uid), fmt.Sprintf("draw_%s", d.reqTime.Format("20060102")), 1)
 
 	// 策略
+	err = strategy.New(ctx, d.redisClient, d.drawConfig, d.winInfo, d.userInfo, d.reqTime, params).Handler(ctx)
+	if err != nil {
+		return
+	}
 	// 规则
 	// 库存
 
